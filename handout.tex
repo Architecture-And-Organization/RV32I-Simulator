@@ -1,0 +1,1153 @@
+\documentclass{article}
+%\documentclass[11pt]{article}
+\textwidth = 6.5in
+\textheight = 8.75in
+\hoffset=-1in
+\voffset=-.8in
+
+\usepackage[pass]{geometry}
+\usepackage{color}   % Necessary for colored links
+\usepackage{xcolor}   % for 'violet' line numbers 
+\usepackage[hypcap=true]{caption}       % point to top of figure rather than caption in \hyperref
+%\usepackage{hyperref}
+\usepackage[pagebackref]{hyperref}
+\hypersetup{
+    colorlinks=true,    %set true if you want colored links
+    linkcolor=blue      %choose some color if you want links to stand out
+}
+\let\subsectionautorefname\sectionautorefname
+\let\subsubsectionautorefname\sectionautorefname
+
+
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage{sectsty}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{marginnote}
+
+
+
+%\newcommand{\theListingFontFamily}{\ttfamily\footnotesize}
+%\newcommand{\theListingFontFamily}{\ttfamily\tiny}
+%\newcommand{\ttysize}{\ttfamily\fontsize{8}{10}\selectfont}
+\newcommand{\ttysize}{\ttfamily\fontsize{7}{9}\selectfont}
+
+\lstnewenvironment{tty}
+    {\lstset{language={}, %
+        numbers=left,numberstyle=\tiny,stepnumber=1,numbersep=8pt, %
+        breaklines=true, %
+        frame=single, %
+        showtabs=false, %
+        showstringspaces=false, %
+        tabsize=4, %
+        showlines=true, %  show all blank lines
+        basicstyle=\ttysize}}
+    {}
+
+
+
+
+\newcommand\MyTitle{CSCI 463 Assignment 5 -- RISC-V Simulator} 
+
+%\lstset{numbers=left, numberstyle=\small, stepnumber=1, numbersep=5pt, language={c++}}
+\lstset{numbers=left, numberstyle=\small, stepnumber=1, numbersep=5pt, basicstyle=\footnotesize\ttfamily}
+
+\sectionfont{\Large\sf\bfseries}
+\subsectionfont{\large\sf\bfseries}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagestyle{fancy}
+% supress normal headings and footters
+\fancyhf{}
+% remove the heading rule
+%\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{1pt}
+
+\newcommand\lfText{{\sf\scriptsize Copyright \copyright\ 2020, 2021, 2022 John Winans. All Rights Reserved}\\
+{\sf\scriptsize\FooterText}}
+
+\lfoot{\lfText}
+\rfoot{Page \thepage\ of \pageref{LastPage}}
+\lhead{\MyTitle}
+
+% Sub-footer that shows the git version in the lfoot defined above
+\ifdefined\GitFileName
+    \newcommand{\FooterText}{\tt \GitFileName\\
+\GitDescription}
+\else
+    \newcommand{\FooterText}{\emph{--UNKNOWN--}}
+\fi
+
+% force a footer (but no header) onto the first page as well
+\fancypagestyle{plain}{%
+\renewcommand{\headrulewidth}{0pt} %
+\fancyhf{} % clear all header and footer fields
+\lfoot{\lfText} %
+\rfoot{Page \thepage\ of \pageref{LastPage}}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% For one-sided line numbers in the left margin
+%\usepackage{lineno}
+%\linenumbers
+%\renewcommand\linenumberfont{\normalfont\tiny\sffamily\bfseries\color{violet}}
+%\setlength\linenumbersep{6mm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{.51em}
+
+% do not number the sections
+%\setcounter{secnumdepth}{0}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+%\pagenumbering{gobble}
+ 
+\thispagestyle{plain}
+\centerline{\huge\MyTitle}
+\vspace{.2in}
+\centerline{30 Points}
+
+\begin{abstract}
+\noindent In this assignment, you will extend the functionality of your 
+RISC-V disassembler to also simulate the execution of RV32I instructions.
+
+This is the third of a multi-part assignment creating computing machine 
+capable of executing real programs compiled with gcc.  
+The purpose is to gain an understanding of a machine and its instruction set
+while exercising your programming skills.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem Description}
+
+Load a binary file into a simulated memory of sufficient 
+size and then decode and execute each 32-bit instruction one-at-a-time
+starting from address zero and continuing until an \verb@ebreak@ instruction 
+is encountered, an instruction-count limit is reached, or an illegal 
+instruction has been encountered.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Files You Must Write}
+
+You will write a C++ program suitable for execution on 
+\verb@hopper.cs.niu.edu@ (or \verb@turing.cs.niu.edu@.)
+
+Your source files {\em MUST} be named exactly as shown below or they will 
+fail to compile and you will receive zero points for this assignment.
+
+Create a directory named \verb@a5@ and place within it a copy of all the
+the source files from assignment 4 and add the additional files discussed below.
+
+\begin{itemize}
+\item \verb@hex.h@ (see assignment 4.)
+\item \verb@hex.cpp@ (see assignment 4.)
+\item \verb@memory.h@ (see assignment 4.)
+\item \verb@memory.cpp@ (see assignment 4.)
+
+\item \verb@rv32i_decode.h@ (see assignment 4.)
+\item \verb@rv32i_decode.cpp@ (see assignment 4.)
+
+\item \verb@rv32i_hart.cpp@ The definition of the class \verb@rv32i_hart@.
+\item \verb@rv32i_hart.h@ The definitions of member functions of class \verb@rv32i_hart@.
+
+\item \verb@registerfile.h@ The definition of the \verb@registerfile@ class will go here.
+\item \verb@registerfile.cpp@ The \verb@registerfile@ class member function definitions.
+
+\item \verb@cpu_single_hart.h@ The definition of the class \verb@cpu_single_hart@.
+\item \verb@cpu_single_hart.cpp@ The \verb@cpu_single_hart@ class member function definitions.
+
+\item \verb@main.cpp@ Your \verb@main()@ and \verb@usage()@ function definitions.
+\end{itemize}
+
+{\em Provided that no mistakes are present in the files for Assignment 4 then
+no changes to those files are necessary.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{{\tt registerfile.h} and {\tt registerfile.cpp}}
+
+The purpose of this class is to store the state of the general-purpose 
+registers of one RISC-V {\em hart}.\footnote{The term {\em hart} means
+``hardware thread.''  As part of the simple CPU you are creating for 
+this assignment, this term is the same as what is often referred to 
+as a {\em core}.}
+
+Recall that a RISC-V hart has 32 registers and that every one is
+identical except for register \verb@x0@.
+
+Register \verb@x0@ will always contain the value zero when ever it is
+read and it will never store anything that is written into it (such
+data is simply ignored/discarded.)
+
+Implement \verb@registerfile@ with a private vector of 
+\verb@int32_t@ elements (one for each register) and a constructor that 
+uses the \verb@reset()@ method to initialize register \verb@x0@ to zero, 
+and all other registers to \verb@0xf0f0f0f0@.
+
+It must provide the following member functions:
+
+\begin{itemize}
+\item \verb@void reset();@
+
+Initialize register \verb@x0@ to zero, and all other registers to \verb@0xf0f0f0f0@.
+
+\item \verb@void set(uint32_t r, int32_t val);@
+
+Assign register \verb@r@ the given \verb@val@.  
+If \verb@r@ is zero then do nothing.
+
+\item \verb@int32_t get(uint32_t r) const;@
+
+Return the value of register \verb@r@.
+If \verb@r@ is zero then return zero.
+
+\item \verb@void dump(const std::string &hdr) const;@
+
+Implement a dump of the registers.  The \verb@hdr@ parameter is a string that
+must be printed at the begining of the output lines.  For example, if called 
+as \verb@dump("")@ then the output must be formatted precisely as:
+{\small
+\begin{verbatim}
+ x0 00000000 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+ x8 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x16 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x24 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+\end{verbatim}
+}
+
+if called as \verb@dump("HEADER-")@ then the output must be formatted precisely as:
+{\small
+\begin{verbatim}
+HEADER- x0 00000000 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+HEADER- x8 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+HEADER-x16 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+HEADER-x24 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+\end{verbatim}
+}
+
+Note the space-gap  on the first two lines.
+
+Inherit the \verb@hex@ class and use its \verb@hex32()@ utility function to simplify printing 
+the register values!
+
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{{\tt rv32i\_hart.h} and {\tt rv32i\_hart.cpp}}
+
+Define \verb@rv32i_hart@ as a subclass of \verb@rv32i_decode@
+to represent the execution unit of a RV32I hart as seen in 
+\autoref{rv32i_hart}
+
+Implement a member function named \verb@exec@ (using a similar 
+design as that used in \verb@rv32i_decode::decode@) to simulate 
+the execution of RV32I instructions and helper methods for 
+each instruction with names like \verb@exec_lui@ and \verb@exec_jalr@ 
+to perform the simulated execution.
+
+
+\begin{figure}[ht]
+%\hspace*{-2cm}\begin{minipage}{\textwidth}
+%\hspace*{1cm}
+\begin{minipage}{\textwidth}
+{\small
+\begin{tty}
+class rv32i_hart : public rv32i_decode
+{
+public:
+    rv32i_hart(memory &m) : mem(m) { }
+    void set_show_instructions(bool b) { show_instructions = b; }
+    void set_show_registers(bool b) { show_registers = b; }
+    bool is_halted() const { return halt; }
+    const std::string &get_halt_reason() const { return halt_reason; }
+    uint64_t get_insn_counter() const { return insn_counter; }
+    void set_mhartid(int i) { mhartid = i; }
+
+    void tick(const std::string &hdr="");
+    void dump(const std::string &hdr="") const;
+    void reset();
+
+private:
+    static constexpr int instruction_width          = 35;
+    void exec(uint32_t insn, std::ostream*);
+    void exec_illegal_insn(uint32_t insn, std::ostream*);
+  ...
+
+    bool halt = { false };
+    std::string halt_reason = { "none" };
+  ...
+    uint64_t insn_counter = { 0 };
+    uint32_t pc = { 0 };
+    uint32_t mhartid = { 0 };
+
+protected:
+    registerfile regs;
+    memory &mem;
+};
+\end{tty}
+}\end{minipage}
+\captionof{figure}{{\tt rv32i\_hart()}}
+\label{rv32i_hart}
+\end{figure}
+
+
+
+\subsubsection{{\tt rv32i\_hart} Public Member Functions}
+
+\begin{itemize}
+
+\item \verb@rv32i_hart(memory &m);@
+
+	The constructor must initialize \verb@mem@ as shown in \autoref{rv32i_hart} 
+	(because the \verb@mem@ member variable is a reference.)
+
+\item \verb@void set_show_instructions(bool b);@
+
+	Mutator for \verb@show_instructions@.
+	When \verb@true@, show each instruction that is executed with a comment 
+	displaying the register values used (as seen in~\autoref{exec.operation.format}.)
+
+\item \verb@void set_show_registers(bool b);@
+
+	Mutator for \verb@show_registers@.
+	When \verb@true@, dump the registers before instruction is executed.
+
+\item \verb@bool is_halted() const;@
+
+	Accessor for \verb@halt@.
+	Return \verb@true@ if the hart has been halted for any reason.
+
+\item \verb@const std::string &get_halt_reason() const;@
+
+	Return a string indicating the reason the hart has been halted.
+	Values returned are one of the following:
+\begin{itemize}
+\item \verb@"none"@
+\item \verb@"EBREAK instruction"@
+\item \verb@"ECALL instruction"@
+\item \verb@"Illegal CSR in CSRRS instruction"@
+\item \verb@"Illegal instruction"@
+\item \verb@"PC alignment error"@
+\end{itemize}
+
+
+\item \verb@void reset();@
+
+Reset the \verb@rv32i@ object and the \verb@registerfile@.  
+
+To reset a hart:
+\begin{itemize}
+\item Set the \verb@pc@ register to zero.
+\item Call \verb@regs.reset()@ to reset the register values.
+\item Set the \verb@insn_counter@ to zero.
+\item Set the the \verb@halt@ flag to false.
+\item Set the the \verb@halt_reason@ to \verb@"none"@.
+\end{itemize}
+
+
+\item \verb@void dump(const std::string &hdr="") const;@
+
+Dump the entire state of the hart.  
+Prefix each line printed by the given \verb@hdr@ string (the default being
+to not print any prefix.)
+It will dump the GP-regs (making use of the \verb@regs@ member variable
+by calling \verb@regs.dump(hdr)@)
+and then add a dump of the \verb@PC@ register in the following format:
+
+{\small
+\begin{verbatim}
+ x0 00000000 f0f0f0f0 00001000 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+ x8 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x16 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x24 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+ pc 00000000
+\end{verbatim}
+}
+
+If the \verb@hdr@ string is set to \verb@"[XYZ] "@ then the output would look like:
+
+{\small
+\begin{verbatim}
+[XYZ]  x0 00000000 f0f0f0f0 00001000 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+[XYZ]  x8 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+[XYZ] x16 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+[XYZ] x24 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+[XYZ]  pc 00000000
+\end{verbatim}
+}
+
+
+
+\item \verb@uint64_t get_insn_counter() const;@
+
+	Accessor for \verb@insn_counter@.
+	Return the number of instructions that have been executed by the simulator since 
+	the last \verb@reset()@.
+
+\item \verb@void set_mhartid(int i);@
+
+	Mutator for \verb@mhartid@.
+	This is used to set the ID value to be returned by the \verb@csrrs@ instruction
+	for CSR register number \verb@0xf14@.  ({\em This will always be zero on processors
+	that only have a single-hart.})
+
+
+
+
+
+\item \verb@void tick(const std::string &hdr="");@
+\label{tick.specification}
+
+The \verb@tick()@ method function is how to tell the simulator to execute
+and instruction.  The \verb@hdr@ parameter is required to be printed on the left
+of any and all output that is displayed as a result of calling this method.
+
+If the hart is halted then return immediately without doing anything.
+Otherwise, simulate the execution of one single instruction:
+
+\begin{itemize}
+\item If \verb@show_registers@ is true then dump the state of the hart with the given \verb@hdr@.
+\item If the \verb@pc@ register is {\em not} a multiple of 4 then set the \verb@halt@ flag to true,
+	the \verb@halt_reason@ to \verb@"PC alignment error"@, and return without further processing.
+\item Increment the \verb@insn_counter@ variable (not the \verb@pc@ register.)
+\item Fetch an instruction from the memory at the address in the \verb@pc@ register.
+\item If \verb@show_instructions@ is true then
+\begin{itemize}
+\item Print the \verb@hdr@, the \verb@pc@ register (in hex), and the 32-bit fetched instruction (in hex).
+\item Call \verb@exec(insn, &std::cout)@ to execute the instruction and render the instruction and simulation details.
+\end{itemize}
+\item else
+\begin{itemize}
+\item Call \verb@exec(insn, nullptr)@ to execute the instruction {\em without} rendering anything.
+\end{itemize}
+\end{itemize}
+
+Note that the \verb@reset()@ and \verb@tick()@ methods are the {\em only} 
+way to change the state of the simulated hart hardware. (Which is similar 
+to but not to be confused with changing the state of the C++ \verb@rv32i_hart@ object!
+For example, the notion of calling \verb@set_show_instructions()@ can change the
+state of the \verb@rv32i_hart@ object.  But it does {\em not} change the state
+of the simulated hart hardware.)
+
+
+\subsubsection{{\tt rv32i\_hart} Private Member Functions}
+
+
+
+
+
+
+\item \verb@void exec(uint32_t insn, std::ostream*);@
+
+This function will execute the given RV32I instruction by making use of the 
+\verb@get_xxx()@ methods to extract the needed instruction fields to decode the
+instruction and invoke the associated \verb@exec_xxx()@ helper function by using the 
+same sort of \verb@switch@-logic from assignment 4. See \autoref{exec}.
+
+This function must be capable of handling any 32-bit \verb@insn@ value. 
+If an illegal instruction is encountered then call an 
+\verb@exec_illegal_insn()@ method to take care of the situation.
+
+
+\begin{figure}[ht]
+\begin{minipage}{\textwidth}
+\centering
+\begin{tty}
+void rv32i_hart::exec(uint32_t insn, std::ostream* pos)
+{
+	...
+
+    switch(opcode)
+    {
+    default:                exec_illegal_insn(insn, pos); return;
+    case opcode_lui:        exec_lui(insn, pos); return;
+    case opcode_auipc:      exec_auipc(insn, pos); return;
+
+    ...
+	}
+}
+\end{tty}
+\end{minipage}
+\captionof{figure}{Implementing {\tt exec()}}
+\label{exec}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+\item \verb@void exec_illegal_insn(uint32_t insn, std::ostream* pos);@
+
+Set the \verb@halt@ flag and, if the \verb@ostream*@ parameter is not 
+\verb@nullptr@ then
+use \verb@render_illegal_insn()@ to render the proper error message
+by writing it to the \verb@pos@ output stream. See \autoref{exec_illegal_insn}.
+
+\begin{figure}[ht]
+%\hspace*{1cm}
+\begin{minipage}{\textwidth}
+{\small
+\begin{tty}
+void rv32i_hart::exec_illegal_insn(uint32_t insn, std::ostream* pos)
+{
+    if (pos)
+        *pos << render_illegal_insn(insn);
+    halt = true;
+    halt_reason = "Illegal instruction";
+}
+\end{tty}
+}\end{minipage}
+\captionof{figure}{{\tt exec\_illegal\_insn()}}
+\label{exec_illegal_insn}
+\end{figure}
+
+
+
+
+
+\item \verb@void exec_xxx(uint32_t insn, std::ostream*);@
+
+Your \verb@exec_xxx()@ helper functions perform a similar role as the 
+\verb@render_xxx()@ helpers.  However, the \verb@exec@ helpers will
+simulate the execution of an instruction.
+
+Each \verb@exec@ helper function must simulate the execution of an instruction and, 
+optionally, render the details of what it is simulating.
+
+The rendering of the simulation details for each instruction can be seen in 
+\autoref{exec.operation.format}.
+
+Use the \verb@render_xxx()@ helpers from assignment 4 to render the decoded 
+instructions when needed by the \verb@exec_xxx()@ helpers.
+
+To align the comment column when adding the simulation details to
+those instructions that have them, 
+consider using the \verb@std::setw()@ I/O manipulator to add padding 
+on the right as seen in \autoref{exec:slt}
+
+Note that the simulation-description comments are modeled on the way that
+the operations are described in the ``Detailed Description'' column of the 
+reference card at the end of RVALP. 
+{\em Note that for sake of space, the incrementing of the \verb@pc@
+register is not shown by this simulator except in the branch and jump instructions,
+where the updating of the \verb@pc@ register is a significant
+aspect of the instruction.}
+
+When rendering the \verb@exec@ operations comment, the data values displayed 
+are those of the registers, fields, or data involved in the instruction. 
+When combined with the hart dumps before and after each instruction execution, 
+they provide everything necessary to verify that an instruction 
+has been implemented properly.
+
+See \autoref{exec.operation.format} for examples of the comment format of each 
+type of instruction.
+
+Your output must precisely match the reference output or it will be 
+ungradable and you will receive a zero for the output portion of your grade.
+
+The correct value for the \verb@instruction_width@ constant is 35;
+
+See \autoref{exec:slt}.
+
+
+
+\begin{figure}[ht]
+%\hspace*{1cm}
+\begin{minipage}{\textwidth}
+{\small
+\begin{tty}
+void rv32i_hart::exec_slt(uint32_t insn, std::ostream* pos)
+{
+    uint32_t rd = get_rd(insn);
+    uint32_t rs1 = get_rs1(insn);
+    uint32_t rs2 = get_rs2(insn);
+
+    int32_t val = (regs.get(rs1) < regs.get(rs2)) ? 1 : 0;
+
+    if (pos)
+    {
+        std::string s = render_rtype(insn, "slt    ");
+        *pos << std::setw(instruction_width) << std::setfill(' ') << std::left << s;
+        *pos << "// " << render_reg(rd) << " = (" << hex::to_hex0x32(regs.get(rs1)) << " < " << hex::to_hex0x32(regs.get(rs2)) << ") ? 1 : 0 = " << hex::to_hex0x32(val);
+    }
+    regs.set(rd, val);
+    pc += 4;
+}
+\end{tty}
+}\end{minipage}
+\captionof{figure}{{\tt exec\_slt()}}
+\label{exec:slt}
+\end{figure}
+
+
+\end{itemize}
+
+
+
+
+
+
+\subsubsection{{\tt rv32i\_hart} Protected Member Variables}
+
+\begin{itemize}
+
+\item \verb@registerfile regs;@
+
+The GP-regs (general purpose registers) for your simulation.
+
+\item \verb@memory &mem;@
+
+This will contain a reference to the \verb@memory@ object from assignment 3.
+It will be used by the disassembler and execution logic to fetch the instructions
+and to read/write data in the load and store instructions.
+
+
+
+
+
+
+\subsubsection{{\tt rv32i\_hart} Private Member Variables}
+
+\item \verb@bool halt;@
+
+A flag to stop the hart from executing instructions.  Set it any time 
+that the execution should halt and use it in \verb@tick()@ to prevent
+further instructions from executing until/unless \verb@reset()@ is invoked.
+
+\item \verb@std::string halt_reason;@
+
+If \verb@halt@ is set to true, also set this to contain a string describing
+the reason for the halt.
+Initialize to \verb@"none"@ if \verb@reset()@ is called.
+
+\item \verb@uint32_t mhartid;@
+
+This contains the CSR register value to return by a \verb@csrrs@ instruction that
+reads register \verb@0xf14@.  Set the default value for this to zero. ({\em In this
+assignment, this default value will never change}.)
+
+\item \verb@bool show_instructions;@
+
+A flag with a default value of false.  When true, print each instruction
+when simulating its execution.  
+
+\item \verb@bool show_registers;@
+
+A flag with a default value of false.  When true, print a dump of the hart state 
+(by calling \verb@dump()@) before executing each instruction.
+
+\item \verb@uint64_t insn_counter;@
+
+This will count the number of instructions that have been executed.
+Initialize to zero and if/when \verb@reset()@ is called.
+
+Use this to count the number of instructions executed.
+
+
+\item \verb@uint32_t pc;@
+
+Use this to contain the address of the instruction being decoded/disassembled.
+When decoding instructions that refer to the \verb@pc@ register to calculate 
+a target address (e.g. \verb@auipc@, \verb@jal@, and branch instructions)
+use this value to determine the instruction's memory address.
+
+Initialize to zero and if/when \verb@reset()@ is called.
+
+\end{itemize}
+
+
+
+
+
+
+
+
+
+\subsection{{\tt cpu\_single\_hart.h} and {\tt cpu\_single\_hart.cpp}}
+
+This is a subclass of \verb@rv32i_hart@ that is used to represent a CPU with
+a single hart.
+
+\subsubsection{{\tt cpu\_single\_hart} Public Member Functions}
+
+\begin{itemize}
+
+\item \verb@cpu_single_hart(memory &mem) : rv32i_hart(mem) {}@
+
+Implement this constructor as shown above in order to pass the memory class 
+instance to the constructor in the base class.
+
+\item \verb@void run(uint64_t exec_limit);@
+
+Since code that executes on this simulator has no (practical) way to determine 
+how much memory the machine has, set register \verb@x2@ to the memory size (get 
+it with \verb@mem.get_size()@) before executing any instructions in your \verb@run()@ 
+method. Note that the number of bytes in the memory is also the address of the first 
+byte past the end of the simulated memory.\footnote{By convention, {\tt x2}
+is used as the program's full-descending stack pointer. Setting it to the 
+address of the first {\em non-existent} memory address is suitable for
+allocating the top range of memory addresses to a call-stack used to hold 
+the program's activation records.}
+
+If the \verb@exec_limit@ parameter is zero, call \verb@tick()@ in a loop
+until the \verb@is_halted()@ returns \verb@true@.
+
+If the \verb@exec_limit@ parameter is not zero then enter a loop that will 
+call \verb@tick()@ until \verb@is_halted()@ returns \verb@true@ or 
+\verb@exec_limit@ number of instructions have been executed.  
+
+If the hart becomes halted then print a message indicating why by using 
+\verb@get_halt_reason()@ to get the reason message.
+
+Regardless of why the execution has terminated, print the number of instructions that
+have been executed by using \verb@get_insn_counter()@.
+
+
+
+For example running the simulator with an execution limit of 2, dumps enabled 
+by the \verb@-ir@ command-line options, and simulating the \verb@allinsns5.bin@ 
+example program will result in the output shown in \autoref{run:2:allinsns5.bin}.
+
+\begin{figure}[ht]
+\centering
+\begin{tty}
+winans@x570:~$ ./rv32i -m100 -irl2 allinsns5.bin
+ x0 00000000 f0f0f0f0 00000100 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+ x8 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x16 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x24 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+ pc 00000000
+00000000: abcde237  lui     x4,0xabcde                 // x4 = 0xabcde000
+ x0 00000000 f0f0f0f0 00000100 f0f0f0f0  abcde000 f0f0f0f0 f0f0f0f0 f0f0f0f0
+ x8 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x16 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+x24 f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0  f0f0f0f0 f0f0f0f0 f0f0f0f0 f0f0f0f0
+ pc 00000004
+00000004: abcde217  auipc   x4,0xabcde                 // x4 = 0x00000004 + 0xabcde000 = 0xabcde004
+2 instructions executed
+\end{tty}
+\captionof{figure}{Example output from running: {\tt rv32i -m100 -irl2 allinsns5.bin}}
+\label{run:2:allinsns5.bin}
+\end{figure}
+
+
+\end{itemize}
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{\tt main.cpp}
+
+Provide a \verb@main()@ function so that it accepts the command-line 
+parameters (and reflect them in a proper Usage statement) as discussed below.
+See the example logic in the \verb@main()@ from the last assignment and 
+the on-line manual for getopt(3) for details on how to use it to parse the 
+arguments.
+
+The command line arguments you must provide are:
+
+\begin{itemize}
+\item \verb@[-d]@
+
+	Show a disassembly of the entire memory before program simulation begins.  
+	By default, do not disassemble the program memory.
+
+\item \verb@[-i]@
+
+	Show instruction printing during execution.
+	By default, do not print instructions during execution.
+
+\item \verb@[-l execution-limit]@
+
+	Specifies the maximum limit of instructions to execute.  If set to zero
+	then there is no limit (run forever.) By default there is no limit.
+
+\item \verb@[-m hex-mem-size]@
+
+	Specifies the size of the simulated memory.  By default the size must
+	be \verb@0x100@.
+
+\item \verb@[-r]@
+
+	Show a dump of the hart (GP-registers and \verb@pc@) status before 
+	each instruction is simulated.
+
+\item \verb@[-z]@
+
+	Show a dump of the hart status and memory after the simulation has halted.
+
+\item The last argument is the name of the binary file to load into the memory 
+before the simulation begins.
+
+\end{itemize}
+
+Keep in mind that any of the command-line arguments may appear in any order and
+both on their own:
+
+{\footnotesize
+\begin{verbatim}
+-d -i -r -z -l 1234 -m efc0
+\end{verbatim}
+}
+
+as well as in groups or stuck together:
+
+{\footnotesize
+\begin{verbatim}
+-dirz -l1234 -mefc0
+\end{verbatim}
+}
+
+{\em The getopt(3) function can deal with these situations.  Make sure that your 
+solution does too}.
+
+If any command-line arguments are invalid then your \verb@usage()@ function must print an 
+appropriate error and Usage messages and terminate the program in the traditional manner. 
+(See \url{https://en.wikipedia.org/wiki/Usage_message} and \autoref{usage}.)
+
+\begin{figure}[ht]
+\centering
+\begin{tty}
+winans@x570:~$ ./rv32i -X allinsns5.bin 
+./rv32i: invalid option -- 'X'
+Usage: rv32i [-d] [-i] [-r] [-z] [-l exec-limit] [-m hex-mem-size] infile
+    -d show disassembly before program execution
+    -i show instruction printing during execution
+    -l maximum number of instructions to exec
+    -m specify memory size (default = 0x100)
+    -r show register printing during execution
+    -z show a dump of the regs & memory after simulation
+\end{tty}
+\captionof{figure}{Example output from running: {\tt rv32i -X allinsns5.bin}}
+\label{usage}
+\end{figure}
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Input}
+\label{section:input}
+
+You will be provided with multiple executable test programs and the
+command-line arguments used to run them on the course web site.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Output}
+
+Your program will be tested with a combination of the command-line arguments
+and runs with dumps and traces of instructions executed will be \verb@diff@'d
+against the output from a reference implementation.
+
+Your program must precisely match the reference output to be considered perfect.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{How To Hand In Your Program}
+
+When you are ready to turn in your assignment, make sure that the only files in your a5 directory
+is/are the source files defined and discussed above. Then, in the parent of your a5 directory, use
+the mailprog.463 command to send the contents of the files in your a5 project directory in the
+same manner as we have used in the past.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Grading}
+
+The grade you receive on this programming assignment will be scored according to the
+syllabus and its ability to compile and execute on the Computer Science Department's 
+computer.
+
+{\em It is your responsibility to test your program thoroughly.} 
+
+When we grade your assignment, we will compile it on \verb@hopper.cs.niu.edu@ 
+using these exact commands:
+
+{\footnotesize
+\begin{verbatim}
+g++ -g -Wall -Werror -std=c++14 -c -o main.o main.cpp
+g++ -g -Wall -Werror -std=c++14 -c -o rv32i_decode.o rv32i_decode.cpp
+g++ -g -Wall -Werror -std=c++14 -c -o memory.o memory.cpp
+g++ -g -Wall -Werror -std=c++14 -c -o hex.o hex.cpp
+g++ -g -Wall -Werror -std=c++14 -c -o registerfile.o registerfile.cpp
+g++ -g -Wall -Werror -std=c++14 -c -o rv32i_hart.o rv32i_hart.cpp
+g++ -g -Wall -Werror -std=c++14 -c -o cpu_single_hart.o cpu_single_hart.cpp
+g++ -g -Wall -Werror -std=c++14 -o rv32i main.o rv32i_decode.o memory.o hex.o registerfile.o rv32i_hart.o cpu_single_hart.o  
+\end{verbatim}
+}
+
+Your program will then be run multiple times using different memory sizes, 
+test data files, and command line options.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Hints}
+
+As always, build up a solution one step at a time.  Some times you
+can start with what you already have and build upon it.  Other times 
+you must create something new and (should) unit test it before trying to 
+integrate it with the rest of your code.
+
+\begin{itemize}
+\item
+Start by updating \verb@main.cpp@ to accept the new command line options 
+and test it by printing out their values.  Then add the conditional call to
+\verb@disassemble(mem)@ and test that your new \verb@-d@ command line option
+works.
+
+\item 
+After the disassembly, construct and reset() your CPU like this:
+
+\begin{quote}
+\begin{verbatim}
+cpu_single_hart cpu(mem);
+cpu.reset();
+\end{verbatim}
+\end{quote}
+
+ 
+\item
+Stub in \verb@void dump(const std::string &hdr="") const;@ that prints only a 
+message to let you know it has been called.
+Then add conditional logic to call it and \verb@mem.dump()@ based on
+the \verb@-z@ command line argument and test it.
+
+\item 
+Add the flags to the \verb@rv32i_hart@ class and set them based on the 
+associated \verb@-i@ and \verb@-r@ command line options.
+
+\item
+Stub in the \verb@rv32i_hart::exec()@ method that treats every instruction as illegal
+and use it to develop and debug your \verb@rv32i_hart::tick()@ and \verb@cpu_single_hart::run()@
+methods. (If you can not execute {\em one illegal} instruction and halt
+the simulation then you can't possibly expect anything else to work.)
+
+If your simulation ends with an \verb@ebreak@ instruction, then the application
+program your simulator is running will have terminated gracefully.  If so then
+your \verb@cpu_single_hart::run()@ method loop should end and print the message:
+
+\begin{quote}
+\verb@Execution terminated. Reason: EBREAK instruction@
+\end{quote}
+
+The other reasons for halting the simulation should print similar messages.
+
+Regardless of why the simulated application has ended, print out the instruction
+counter as seen at the end of \autoref{exec.operation.format}.
+
+Note that it should be trivial to create a file for testing your logic for handing 
+illegal instructions\ldots\ just
+leave one of the actual instructions unimplemented in \verb@rv32i_hart::exec()@ and
+see that it is treated accordingly.  Alternately, you can also run the 
+simulator on just about any random (preferably small or even empty) file 
+and odds are that it will include illegal instruction values.  (No, you 
+will not be given a test file with illegal instructions for testing this 
+specific feature.  It is your job to think creatively to solve this sort of problem.)
+
+\item
+Write the \verb@registerfile@ class add add it as a member to the \verb@rv32i_hart@ class.  
+You should then be able to finish your \verb@rv32i_hart::dump()@ method so that it prints out the 
+GP-regs and the \verb@pc@ register as seen in \autoref{run:2:allinsns5.bin}.
+
+\item
+Finish any remaining work left undone in your in your \verb@rv32i_hart::tick()@ method so that
+it properly calls \verb@rv32i_hart::exec()@ as discussed in \autoref{tick.specification}.
+
+\item
+Use the big \verb@switch@ statement from the \verb@rv32i_decode::decode()@ as a template 
+structure for your \verb@rv32i_hart::exec()@ method. The first instruction you should implement
+should be \verb@ebreak@ (so the test programs can stop your simulator) as seen in 
+\autoref{exec.ebreak}.
+
+\begin{figure}[ht]
+\begin{minipage}{\textwidth}
+\centering
+\begin{tty}
+void rv32i_hart::exec_ebreak(uint32_t insn, std::ostream* pos)
+{
+    if (pos)
+    {
+        std::string s = render_ebreak(insn);
+        *pos << std::setw(instruction_width) << std::setfill(' ') << std::left << s;
+        *pos << "// HALT";
+    }
+    halt = true;
+    halt_reason = "EBREAK instruction";
+}
+\end{tty}
+\end{minipage}
+\captionof{figure}{Executing the {\tt ebreak} instruction.}
+\label{exec.ebreak}
+\end{figure}
+
+Note that \verb@rv32i_hart::exec()@ is called differently than \verb@rv32i_decode::decode()@ 
+in that it is
+void and takes different arguments.  Re-using the already-debugged switch structure
+from assignment 4 should work well, but keep in mind that the cases may
+have to return differently as seen in \autoref{exec}.
+
+
+
+
+
+\item
+At this point, add one instruction at-a-time comparing your output against the reference files.
+
+Since \verb@ebreak@ is a bit simplistic (and a special case that is almost identical to the way
+you should implement the illegal instruction method), a close look at a possible implementation
+logic of a more typical instruction is shown in \autoref{exec:slt}.
+
+The \verb@slt@ instruction is described in the reference card at the end of RVALP as:
+
+\hspace*{2cm}{\tt rd $\leftarrow$ (rs1 < rs2) ? 1 : 0, pc $\leftarrow$ pc+4}
+
+Therefore the instruction and simulation details will be rendered as shown in \autoref{exec.operation.format} 
+and can be summarized as:
+
+\hspace*{2cm}{\small
+\verb@slt x4,x14,x15 // x4 = (0xf0f0f0f0 < 0xf0f0f0f0) ? 1 : 0 = 0x00000000@
+}
+
+The \verb@= 0x00000000@ at the right end of the above simulation detail comment 
+represents the value that is assigned to \verb@x4@.  In other words, it is the 
+final value of the expression: 
+
+\hspace*{2cm}{\small\verb@(0xf0f0f0f0 < 0xf0f0f0f0) ? 1 : 0@}
+
+Consider what happens when the the instruction: \verb@slt x4,x4,x15@ is simulated.
+In order to be able to render the simulation summary comment that shows the values of all the registers
+involved before and after the instruction simulation, it will be necessary to extract the associated
+register values before \verb@val@ in \autoref{exec:slt} is calculated and it must {\em not}
+be stored into the \verb@rd@ register \verb@x4@ until {\em after} the simulation comment has been printed.
+
+The code in \autoref{exec:slt} addresses this problem by its use of the \verb@val@ variable
+as a holder for the calculated result of the instruction.  Then it prints the simulation
+comment (if needed).  Finally, it stores the result into the \verb@rd@ register
+using \verb@regs.set(rd, val)@ and increments the \verb@pc@ register.
+
+
+The same problem occurs with the \verb@pc@ register in the jump and branch instructions.  
+Always be careful that your renderings are of the correct (before/after) values of any registers 
+involved.
+
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{figure}[ht]
+\hspace*{-1.5cm}\begin{minipage}{\textwidth}
+\centering
+{\footnotesize
+\begin{verbatim}
+winans@x570:~$ ./rv32i -i allinsns5.bin
+00000000: abcde237  lui     x4,0xabcde                 // x4 = 0xabcde000
+00000004: abcde217  auipc   x4,0xabcde                 // x4 = 0x00000004 + 0xabcde000 = 0xabcde004
+00000008: 008000ef  jal     x1,0x00000010              // x1 = 0x0000000c,  pc = 0x00000008 + 0x00000008 = 0x00000010
+00000010: 01008267  jalr    x4,16(x1)                  // x4 = 0x00000014,  pc = (0x00000010 + 0x0000000c) & 0xfffffffe = 0x0000001c
+0000001c: feb59ce3  bne     x11,x11,0x00000014         // pc += (0xf0f0f0f0 != 0xf0f0f0f0 ? 0xfffffff8 : 4) = 0x00000020
+00000020: fe004ae3  blt     x0,x0,0x00000014           // pc += (0x00000000 < 0x00000000 ? 0xfffffff4 : 4) = 0x00000024
+00000024: fe0558e3  bge     x10,x0,0x00000014          // pc += (0xf0f0f0f0 >= 0x00000000 ? 0xfffffff0 : 4) = 0x00000028
+00000028: fe0066e3  bltu    x0,x0,0x00000014           // pc += (0x00000000 <U 0x00000000 ? 0xffffffec : 4) = 0x0000002c
+0000002c: fea074e3  bgeu    x0,x10,0x00000014          // pc += (0x00000000 >=U 0xf0f0f0f0 ? 0xffffffe8 : 4) = 0x00000030
+00000030: 00000463  beq     x0,x0,0x00000038           // pc += (0x00000000 == 0x00000000 ? 0x00000008 : 4) = 0x00000038
+00000038: 00b01463  bne     x0,x11,0x00000040          // pc += (0x00000000 != 0xf0f0f0f0 ? 0x00000008 : 4) = 0x00000040
+00000040: 00054463  blt     x10,x0,0x00000048          // pc += (0xf0f0f0f0 < 0x00000000 ? 0x00000008 : 4) = 0x00000048
+00000048: 00005463  bge     x0,x0,0x00000050           // pc += (0x00000000 >= 0x00000000 ? 0x00000008 : 4) = 0x00000050
+00000050: 00a06463  bltu    x0,x10,0x00000058          // pc += (0x00000000 <U 0xf0f0f0f0 ? 0x00000008 : 4) = 0x00000058
+00000058: 00007463  bgeu    x0,x0,0x00000060           // pc += (0x00000000 >=U 0x00000000 ? 0x00000008 : 4) = 0x00000060
+00000060: 01000313  addi    x6,x0,16                   // x6 = 0x00000000 + 0x00000010 = 0x00000010
+00000064: 01034203  lbu     x4,16(x6)                  // x4 = zx(m8(0x00000010 + 0x00000010)) = 0x000000e3
+00000068: 00134203  lbu     x4,1(x6)                   // x4 = zx(m8(0x00000010 + 0x00000001)) = 0x00000082
+0000006c: 01035203  lhu     x4,16(x6)                  // x4 = zx(m16(0x00000010 + 0x00000010)) = 0x00004ae3
+00000070: 00a35203  lhu     x4,10(x6)                  // x4 = zx(m16(0x00000010 + 0x0000000a)) = 0x0000feb0
+00000074: 01030203  lb      x4,16(x6)                  // x4 = sx(m8(0x00000010 + 0x00000010)) = 0xffffffe3
+00000078: 01130203  lb      x4,17(x6)                  // x4 = sx(m8(0x00000010 + 0x00000011)) = 0x0000004a
+0000007c: 01031203  lh      x4,16(x6)                  // x4 = sx(m16(0x00000010 + 0x00000010)) = 0x00004ae3
+00000080: 00a31203  lh      x4,10(x6)                  // x4 = sx(m16(0x00000010 + 0x0000000a)) = 0xfffffeb0
+00000084: 01032203  lw      x4,16(x6)                  // x4 = sx(m32(0x00000010 + 0x00000010)) = 0xfe004ae3
+00000088: fff00293  addi    x5,x0,-1                   // x5 = 0x00000000 + 0xffffffff = 0xffffffff
+0000008c: 0e500ea3  sb      x5,253(x0)                 // m8(0x00000000 + 0x000000fd) = 0x000000ff
+00000090: 0e501823  sh      x5,240(x0)                 // m16(0x00000000 + 0x000000f0) = 0x0000ffff
+00000094: 0e502a23  sw      x5,244(x0)                 // m32(0x00000000 + 0x000000f4) = 0xffffffff
+00000098: 4d260213  addi    x4,x12,1234                // x4 = 0xf0f0f0f0 + 0x000004d2 = 0xf0f0f5c2
+0000009c: 4d262213  slti    x4,x12,1234                // x4 = (0xf0f0f0f0 < 1234) ? 1 : 0 = 0x00000001
+000000a0: 4d263213  sltiu   x4,x12,1234                // x4 = (0xf0f0f0f0 <U 1234) ? 1 : 0 = 0x00000000
+000000a4: 4d264213  xori    x4,x12,1234                // x4 = 0xf0f0f0f0 ^ 0x000004d2 = 0xf0f0f422
+000000a8: 4d266213  ori     x4,x12,1234                // x4 = 0xf0f0f0f0 | 0x000004d2 = 0xf0f0f4f2
+000000ac: 4d267213  andi    x4,x12,1234                // x4 = 0xf0f0f0f0 & 0x000004d2 = 0x000000d0
+000000b0: 00c69213  slli    x4,x13,12                  // x4 = 0xf0f0f0f0 << 12 = 0x0f0f0000
+000000b4: 00c6d213  srli    x4,x13,12                  // x4 = 0xf0f0f0f0 >> 12 = 0x000f0f0f
+000000b8: 40c6d213  srai    x4,x13,12                  // x4 = 0xf0f0f0f0 >> 12 = 0xffff0f0f
+000000bc: 00f70233  add     x4,x14,x15                 // x4 = 0xf0f0f0f0 + 0xf0f0f0f0 = 0xe1e1e1e0
+000000c0: 40f70233  sub     x4,x14,x15                 // x4 = 0xf0f0f0f0 - 0xf0f0f0f0 = 0x00000000
+000000c4: 00f711b3  sll     x3,x14,x15                 // x3 = 0xf0f0f0f0 << 16 = 0xf0f00000
+000000c8: 00f72233  slt     x4,x14,x15                 // x4 = (0xf0f0f0f0 < 0xf0f0f0f0) ? 1 : 0 = 0x00000000
+000000cc: 00f73233  sltu    x4,x14,x15                 // x4 = (0xf0f0f0f0 <U 0xf0f0f0f0) ? 1 : 0 = 0x00000000
+000000d0: 00f74233  xor     x4,x14,x15                 // x4 = 0xf0f0f0f0 ^ 0xf0f0f0f0 = 0x00000000
+000000d4: 00f751b3  srl     x3,x14,x15                 // x3 = 0xf0f0f0f0 >> 16 = 0x0000f0f0
+000000d8: 40f751b3  sra     x3,x14,x15                 // x3 = 0xf0f0f0f0 >> 16 = 0xfffff0f0
+000000dc: 00f76233  or      x4,x14,x15                 // x4 = 0xf0f0f0f0 | 0xf0f0f0f0 = 0xf0f0f0f0
+000000e0: 00f77233  and     x4,x14,x15                 // x4 = 0xf0f0f0f0 & 0xf0f0f0f0 = 0xf0f0f0f0
+000000e4: f14022f3  csrrs   x5,0xf14,x0                // x5 = 0
+000000e8: 00100073  ebreak                             // HALT
+Execution terminated. Reason: EBREAK instruction
+50 instructions executed
+\end{verbatim}
+}\end{minipage}
+\captionof{figure}{{\tt exec()} Instruction operation comment format.}
+\label{exec.operation.format}
+\end{figure}
+
+\end{document}
