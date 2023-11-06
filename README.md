@@ -1,3 +1,7 @@
+To build this on Ubuntu, first install LaTeX
+
+    sudo apt install texlive-latex-extra
+    
 # Fall 2022 RISC-V simulator project part 3
 
 ## From Volume II: RISC-V Privileged Architectures V1.12-draft:
